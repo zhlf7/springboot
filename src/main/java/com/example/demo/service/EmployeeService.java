@@ -2,7 +2,11 @@ package com.example.demo.service;
 
 import com.example.demo.bean.Employee;
 import com.example.demo.dao.EmployeeMapper;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +16,8 @@ import java.util.List;
 public class EmployeeService {
     @Autowired
     private EmployeeMapper employeeMapper;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     public Employee getEmpandDepById(Integer id){
         Employee employee=employeeMapper.getEmpandDepById(id);
@@ -20,20 +26,19 @@ public class EmployeeService {
     @Cacheable(value = {"employee"})
     public Employee getEmpById(Integer id){
         Employee employee=employeeMapper.getEmpById(id);
+        /*发送一个消息*/
+        rabbitTemplate.convertAndSend("exchang.direct","test.news",employee);
         return employee;
     }
-
-    public boolean updateEmp(Employee employee){
-
-        boolean flag=false;
+    @CachePut(value ="employee",key = "#employee.eId")
+    public Employee updateEmp(Employee employee){
         try{
             employeeMapper.updateEmp(employee);
-            flag=true;
         }catch(Exception e){
             System.out.println("修改失败!");
             e.printStackTrace();
         }
-        return flag;
+        return employee;
     }
 
     public boolean insertEmpList(List<Employee> employeeList){
@@ -47,7 +52,7 @@ public class EmployeeService {
         System.out.println(employeeList);
         return flag;
     }
-
+    @CacheEvict(value = "employee",key = "#employee.eId" )
     public boolean delEmpById(Employee employee){
         boolean flag=false;
         try {
@@ -58,4 +63,10 @@ public class EmployeeService {
         }
         return flag;
     }
+    @RabbitListener(queues = "test.news")
+    public void receive(Employee employee){
+        System.out.println("收到消息："+employee);
+
+    }
+
 }

@@ -26,7 +26,7 @@ public class EmployeeController {
     }
 
     @RequestMapping(value = "/updataEmp",method = RequestMethod.PUT)
-    public boolean  updateEmp(@RequestBody Employee employee){
+    public Employee  updateEmp(@RequestBody Employee employee){
         System.out.println(employee);
         return employeeService.updateEmp(employee);
     }
