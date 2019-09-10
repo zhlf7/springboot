@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace命名空间，唯一标识。一般指定为自定义的接口文件，下面相当于这个接口的实现类 -->
+<mapper namespace="com.example.demo.dao.EmployeeMapper">
+    <!-- 定义结果集，column表示sql查询列,property表示映射到实体的属性 -->
+    <resultMap type="com.example.demo.bean.Employee" id="myEmpAndDep">
+        <result column="e_id"  property="eId"/>
+        <result column="name"  property="name"/>
+        <result column="gender"  property="gender"/>
+        <result column="d_id"  property="dId"/>
+        <!-- 关联对象 -->
+        <association property="department" javaType="com.example.demo.bean.Department">
+            <!-- 关联条件Employee的dept_id对应着Department的id -->
+            <id column="d_id" property="id"/>
+            <result column="dep_name"  property="name"/>
+        </association>
+    </resultMap>
+
+    <!-- 定义结果集，column表示sql查询列,property表示映射到实体的属性 -->
+    <resultMap type="com.example.demo.bean.Employee" id="myEmp">
+        <result column="e_id"  property="eId"/>
+        <result column="name"  property="name"/>
+        <result column="gender"  property="gender"/>
+        <result column="d_id"  property="dId"/>
+    </resultMap>
+
+    <!-- resultMap指定使用上面定义的结果集,查询使用关联查询，查询列要和上面的column对应 -->
+    <select id="getEmpandDepById" resultMap="myEmpAndDep">
+    select emp.*,dep.name dep_name from employee emp,department dep where e_id=#{id} and emp.d_id=dep.id
+
+    </select>
+    <!---->
+    <select id="getEmpById" resultMap="myEmp">
+    select * from employee where e_id=#{id}
+    </select>
+    <!--更新英雄-->
+    <update id="updateEmp" parameterType="com.example.demo.bean.Employee">
+        update employee
+        <set>
+            <if test="name!=null">name=#{name},</if>
+            <if test="gender!=null">gender=#{gender},</if>
+            <if test="dId!=null">d_id=#{dId}</if>
+        </set>
+        WHERE e_id=#{eId}
+    </update>
+    <!--批量插入英雄-->
+    <insert id="insertEmpList">
+        insert into employee (name,gender,d_id)
+		values
+		<foreach collection="employeeList" item="employee" separator=",">
+            (#{employee.name},#{employee.gender},#{employee.dId})
+        </foreach>
+
+    </insert>
+
+    <delete id="delEmpById" parameterType="com.example.demo.bean.Employee">
+        delete from employee WHERE e_id = #{eId}
+    </delete>
+
+    </mapper>
